@@ -17,7 +17,6 @@ class ContactsNotifier extends StateNotifier<List<Contact>?> {
     final contacts = await fetchContacts();
     state = contacts;
     if (contacts != null) {
-      print(contacts.length);
       ref.read(filteredContactsProvider.notifier).set(contacts);
     }
   }
@@ -42,35 +41,68 @@ class FilteredContactsNotifier extends StateNotifier<List<Contact>> {
 
 final selectedContactProvider =
     StateNotifierProvider<SelectedContactNotifier, Contact?>((ref) {
-  return SelectedContactNotifier();
+  return SelectedContactNotifier(ref);
 });
 
 class SelectedContactNotifier extends StateNotifier<Contact?> {
-  SelectedContactNotifier() : super(null);
+  Ref ref;
+  SelectedContactNotifier(this.ref) : super(null);
+
+  set(contact) {
+    state = contact;
+    ref.read(chatsProvider.notifier).fetch(contact);
+  }
 }
 
-final chatsProvider =
-    StateNotifierProvider<ChatsAsyncNotifier, AsyncValue<List<Message>?>>(
-        (ref) => ChatsAsyncNotifier());
+final chatsProvider = StateNotifierProvider<ChatsAsyncNotifier, List<Message>?>(
+    (ref) => ChatsAsyncNotifier(ref));
 
-class ChatsAsyncNotifier extends StateNotifier<AsyncValue<List<Message>?>> {
+class ChatsAsyncNotifier extends StateNotifier<List<Message>?> {
   List<Message>? _chats;
+  Ref ref;
 
-  ChatsAsyncNotifier() : super(const AsyncLoading()) {
+  ChatsAsyncNotifier(this.ref) : super(null) {
     if (_chats == null) _init();
   }
 
   Future<void> _init() async {}
 
-  Future<void> empty() async {
-    _chats = null;
-    state = AsyncData(_chats);
+  fetch(Contact? contact) async {
+    if (contact == null) {
+      empty();
+      return;
+    }
+    var newChats = await fetchChat(contact, null);
+    if (newChats != null) {
+      _chats = newChats;
+      state = (_chats);
+    }
   }
 
-  void remove(String gradeId) async {
+  Future<void> empty() async {
+    _chats = null;
+    state = (_chats);
+  }
+
+  void update(Contact contact, timestamp) async {
     if (_chats == null) return;
-    state =
-        const AsyncLoading(); // before we start the removal we make the list loading so that no more changes come from UI
-    state = AsyncData(_chats);
+
+    _chats = await fetchChat(contact, timestamp);
+    state = (_chats);
+  }
+
+  Future<int> loadMore() async {
+    if (_chats == null) return 0;
+    int len = _chats?.length ?? 0;
+    Message lastChat = _chats![len - 1];
+    var contact = ref.watch(selectedContactProvider);
+
+    if (contact != null) {
+      List<Message>? moreChats = await fetchChat(contact, lastChat.timestamp);
+      _chats = moreChats != null ? [..._chats!, ...moreChats] : _chats;
+      state = _chats;
+      return moreChats!.length;
+    }
+    return 0;
   }
 }

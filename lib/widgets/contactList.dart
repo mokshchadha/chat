@@ -18,6 +18,7 @@ class _ContactListState extends ConsumerState<ContactList> {
     contacts.forEach((contact) {
       if (contact.name.toLowerCase().contains(query.toLowerCase()) ||
           contact.company.toLowerCase().contains(query.toLowerCase()) ||
+          contact.phone.toLowerCase().contains(query.toLowerCase()) ||
           contact.designation.toLowerCase().contains(query.toLowerCase())) {
         filtered.add(contact);
       }
@@ -53,10 +54,10 @@ class _ContactListState extends ConsumerState<ContactList> {
               itemBuilder: (context, index) {
                 final contact = filteredContacts[index];
                 return InkWell(
-                  onTap: () {
-                    //=> Navigator.pushNamed(context, '/chat')
-                  },
+                  onTap: () =>
+                      ref.read(selectedContactProvider.notifier).set(contact),
                   child: Container(
+                      key: Key(contact.phone),
                       decoration: BoxDecoration(
                           border: Border.all(width: 0.125, color: Colors.grey)),
                       child: ListTile(

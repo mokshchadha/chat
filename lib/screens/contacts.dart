@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ContactScreen extends ConsumerWidget {
-  String routeName = '/contacts';
+  final String routeName = '/contacts';
+
+  const ContactScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Row(
-        children: [
+        children: const [
           Expanded(
             flex: 2,
             child: ContactList(),

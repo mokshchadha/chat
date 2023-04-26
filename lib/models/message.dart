@@ -1,7 +1,14 @@
+class Sender {
+  final String role;
+  final String email;
+
+  Sender({required this.email, required this.role});
+}
+
 class Message {
   final String text;
   final String status;
-  final DateTime timestamp;
+  final num timestamp;
   final String sender;
   final String contactId;
   final String eventDirection;
@@ -22,24 +29,30 @@ class Message {
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      text: json['text'] as String,
-      status: json['status'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      sender: json['sender'] as String,
-      contactId: json['contactId'] as String,
-      eventDirection: json['eventDirection'] as String,
-      media: json['media'] as String,
-      context: json['context'] as String,
-      messageId: json['messageId'] as String,
-    );
+    try {
+      return Message(
+        text: json['text'] ?? '',
+        status: json['status'] ?? '',
+        timestamp: json['timestamp'] ?? 0,
+        sender: '',
+        contactId: json['contactId'] ?? '',
+        eventDirection: json['eventDirection'] ?? '',
+        media: json['media'] ?? '',
+        context: json['context'] ?? '',
+        messageId: json['messageId'] ?? '',
+      );
+    } catch (e) {
+      print(e);
+      print(json);
+    }
+    return Message.fromJson({});
   }
 
   Map<String, dynamic> toJson() {
     return {
       'text': text,
       'status': status,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp,
       'sender': sender,
       'contactId': contactId,
       'eventDirection': eventDirection,
